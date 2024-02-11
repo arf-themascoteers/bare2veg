@@ -4,22 +4,31 @@ import torch.nn as nn
 import torch.optim as optim
 from generator import Generator
 from discriminator import Discriminator
-import os
 import utils
-from torch.utils.data import DataLoader
 import pandas as pd
+from sklearn import model_selection
+from sklearn.preprocessing import MinMaxScaler
 
+
+scaler = MinMaxScaler()
+dataset_full = pd.read_csv("data/full.csv")
+dataset_full = pd.DataFrame(scaler.fit_transform(dataset_full), columns=dataset_full.columns)
+train, test = model_selection.train_test_split(dataset_full, test_size=0.1, random_state=2)
+dataset_full.to_csv("results/full_normalized.csv", index=False)
+train.to_csv("results/train.csv", index=False)
+test.to_csv("results/test.csv", index=False)
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-dataset_train = pd.read_csv("data/train.csv").sample(frac=1).to_numpy()
+dataset_train = train.to_numpy()
 dataset_train = torch.tensor(dataset_train, dtype=torch.float32).to(device)
 
-dataset_test = pd.read_csv("data/test.csv").to_numpy()
+dataset_test = test.to_numpy()
 dataset_test = torch.tensor(dataset_test, dtype=torch.float32).to(device)
 
 loss_comparison = nn.BCEWithLogitsLoss()
 L1_loss = nn.L1Loss()
+
 
 def discriminator_training(inputs, targets, discriminator_opt):
     discriminator_opt.zero_grad()
@@ -49,16 +58,14 @@ def generator_training(inputs, targets, generator_opt, L1_lambda):
     return generator_loss, generated_image
 
 L1_lambda = 100
-NUM_EPOCHS= 3
-lr=0.0002
-beta1=0.5
-beta2=0.999
+NUM_EPOCHS= 100
+lr=0.01
 
 discriminator = Discriminator()
 generator = Generator()
 
-discriminator_opt = optim.Adam(discriminator.parameters(), lr=lr, betas=(beta1, beta2))
-generator_opt = optim.Adam(generator.parameters(), lr=lr, betas=(beta1, beta2))
+discriminator_opt = optim.Adam(discriminator.parameters(), lr=lr)
+generator_opt = optim.Adam(generator.parameters(), lr=lr)
 
 discriminator = discriminator.to(device)
 generator = generator.to(device)
@@ -73,17 +80,31 @@ for epoch in range(NUM_EPOCHS):
         Gen_Loss, generator_image = generator_training(inputs,targets, generator_opt, L1_lambda)
 
     if (epoch % 10) == 0:
-         utils.print_images(inputs,5)
-         utils.print_images(generator_image,5)
-         utils.print_images(targets,5)
+        print(f"After epoch {epoch + 1}")
+        print("Vegetation")
+        utils.print_data(inputs, 5)
+        print("Generated Bare")
+        utils.print_data(generator_image, 5)
+        print("Actual Bare")
+        utils.print_data(targets, 5)
 
 inputs = dataset_test[:, 1:8]
 targets = dataset_test[:, 9:]
 gen = generator(inputs)
-satellite = inputs.detach().cpu()
+veg = inputs.detach().cpu()
 gen = gen.detach().cpu()
-maps = targets.detach().cpu()
+bare = targets.detach().cpu()
+print("Final")
+print("Vegetation")
+utils.print_data(veg, 10)
+print("Generated Bare")
+utils.print_data(gen, 10)
+print("Actual Bare")
+utils.print_data(bare, 10)
 
-utils.print_images(satellite,10)
-utils.print_images(gen,10)
-utils.print_images(maps,10)
+dataset_test = dataset_test.detach().cpu()
+dataset_test[:,9:] = gen
+
+columns = ['OC', 'B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'NDVI', 'B1_bare', 'B2_bare', 'B3_bare', 'B4_bare', 'B5_bare', 'B6_bare', 'B7_bare']
+df = pd.DataFrame(dataset_test, columns=columns)
+df.to_csv('data/test_generated.csv', index=False)

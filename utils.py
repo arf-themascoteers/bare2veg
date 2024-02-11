@@ -1,15 +1,7 @@
-import matplotlib.pyplot as plt
-from sklearn.preprocessing import MinMaxScaler
-import numpy as np
+def print_data(input_data, num_data):
+    for i in range(num_data):
+        input_as_list = input_data[i].tolist()
+        input_as_list = [round(i,4) for i in input_as_list]
+        data_str = "".join([str(i).ljust(10) for i in input_as_list])
+        print(data_str)
 
-
-def print_images(image_tensor, num_images):
-    plt.show()
-
-
-def normalize(data):
-    for i in range(data.shape[1]):
-        scaler = MinMaxScaler()
-        x_scaled = scaler.fit_transform(data[:, i].reshape(-1, 1))
-        data[:, i] = np.squeeze(x_scaled)
-    return data

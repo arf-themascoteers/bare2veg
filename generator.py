@@ -7,9 +7,11 @@ class Generator(nn.Module):
         super(Generator, self).__init__()
 
         self.linear = nn.Sequential(
-            nn.Linear(7,5),
+            nn.Linear(7,10),
             nn.LeakyReLU(),
-            nn.Linear(5, 7),
+            nn.Linear(10, 10),
+            nn.LeakyReLU(),
+            nn.Linear(10, 7),
             nn.Tanh()
         )
 

@@ -40,6 +40,7 @@ def discriminator_training(inputs, targets, discriminator_opt):
     fake_label = torch.zeros(size=fake_output.shape, dtype=torch.float, device=device)
     fake_loss = loss_comparison(fake_output, fake_label)
     Total_loss = (real_loss + fake_loss) / 2
+    print(f"Loss {real_loss.item()} {fake_loss.item()} {Total_loss.item()}")
     Total_loss.backward()
     discriminator_opt.step()
     return Total_loss
@@ -58,7 +59,7 @@ def generator_training(inputs, targets, generator_opt, L1_lambda):
     return generator_loss, generated_image
 
 L1_lambda = 100
-NUM_EPOCHS= 100
+NUM_EPOCHS= 1000
 lr=0.01
 
 discriminator = Discriminator()
@@ -108,3 +109,5 @@ dataset_test[:,9:] = gen
 columns = ['OC', 'B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'NDVI', 'B1_bare', 'B2_bare', 'B3_bare', 'B4_bare', 'B5_bare', 'B6_bare', 'B7_bare']
 df = pd.DataFrame(dataset_test, columns=columns)
 df.to_csv('data/test_generated.csv', index=False)
+
+utils.print_metrics(gen.numpy(), bare.numpy())

@@ -7,9 +7,11 @@ class Discriminator(nn.Module):
         super(Discriminator, self).__init__()
 
         self.linear = nn.Sequential(
-            nn.Linear(14, 5),
+            nn.Linear(14, 10),
             nn.LeakyReLU(),
-            nn.Linear(5, 1)
+            nn.Linear(10, 5),
+            nn.LeakyReLU(),
+            nn.Linear(5, 1),
         )
 
     def forward(self, input, target):

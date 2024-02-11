@@ -1,4 +1,3 @@
-from tqdm.auto import tqdm
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -40,7 +39,7 @@ def discriminator_training(inputs, targets, discriminator_opt):
     fake_label = torch.zeros(size=fake_output.shape, dtype=torch.float, device=device)
     fake_loss = loss_comparison(fake_output, fake_label)
     Total_loss = (real_loss + fake_loss) / 2
-    print(f"Loss {real_loss.item()} {fake_loss.item()} {Total_loss.item()}")
+    #print(f"Loss {real_loss.item()} {fake_loss.item()} {Total_loss.item()}")
     Total_loss.backward()
     discriminator_opt.step()
     return Total_loss
@@ -72,7 +71,6 @@ discriminator = discriminator.to(device)
 generator = generator.to(device)
 
 for epoch in range(NUM_EPOCHS):
-    print(f"Training epoch {epoch+1}")
     inputs = dataset_train[:,1:8]
     targets = dataset_train[:,9:]
 
@@ -81,7 +79,7 @@ for epoch in range(NUM_EPOCHS):
         Gen_Loss, generator_image = generator_training(inputs,targets, generator_opt, L1_lambda)
 
     if (epoch % 10) == 0:
-        print(f"After epoch {epoch + 1}")
+        print(f"After epoch {epoch + 1}, results for first 5 data:")
         print("Vegetation")
         utils.print_data(inputs, 5)
         print("Generated Bare")
@@ -95,13 +93,13 @@ gen = generator(inputs)
 veg = inputs.detach().cpu()
 gen = gen.detach().cpu()
 bare = targets.detach().cpu()
-print("Final")
+print("Training Done. Showing Test Results (for first 5 data).")
 print("Vegetation")
-utils.print_data(veg, 10)
+utils.print_data(veg, 5)
 print("Generated Bare")
-utils.print_data(gen, 10)
+utils.print_data(gen, 5)
 print("Actual Bare")
-utils.print_data(bare, 10)
+utils.print_data(bare, 5)
 
 dataset_test = dataset_test.detach().cpu()
 dataset_test[:,9:] = gen
